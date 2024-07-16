@@ -5,6 +5,7 @@ import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod
 import { confirmTrip } from "./routes/confirm-trip";
 
 import cors from "@fastify/cors";
+import { confirmParticipants } from "./routes/confirm-participant";
 
 const app = fastify();
 
@@ -18,6 +19,7 @@ app.setSerializerCompiler(serializerCompiler);
 
 app.register(createTrip);
 app.register(confirmTrip);
+app.register(confirmParticipants);
 
 app.listen({ port: 3333 }).then(() => {
   console.log("listening port  3333");
