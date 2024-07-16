@@ -2,9 +2,13 @@ import { z } from "zod";
 import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 import { prisma } from "../lib/prisma";
+import localizedFormat from "dayjs/plugin/localizedFormat";
 import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
 import nodemailer from "nodemailer";
 import { getMailClient } from "../lib/mail";
+dayjs.locale("pt-br");
+dayjs.extend(localizedFormat);
 
 export async function createTrip(app: FastifyInstance) {
   //
@@ -36,10 +40,31 @@ export async function createTrip(app: FastifyInstance) {
       const trip = await prisma.trip.create({
         data: {
           destination,
-          ends_at,
           starts_at,
+          ends_at,
+          participants: {
+            createMany: {
+              data: [
+                {
+                  name: owner_name,
+                  email: owner_email,
+                  is_owner: true,
+                  is_confirmed: true,
+                },
+
+                ...emails_to_invite.map((email) => {
+                  return { email };
+                }),
+              ],
+            },
+          },
         },
       });
+
+      const formattedStartDate = dayjs(starts_at).format("LL");
+      const formattedEndDate = dayjs(ends_at).format("LL");
+
+      const confirmationLink = "http://localhost:3333/trips/${trip.id}/confirm";
 
       const mail = await getMailClient();
 
@@ -54,8 +79,20 @@ export async function createTrip(app: FastifyInstance) {
         },
         subject: "Teste de envio",
         html: `
-          <p> teste </p>
-        `,
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <h2 style="text-align: center; color: #333;">Confirmação de Viagem</h2>
+          <p>Olá <strong>${owner_name}</strong>,</p>
+          <p>Sua viagem para <strong>${destination}</strong> está confirmada!</p>
+          <p><strong>Início:</strong> ${formattedStartDate}</p>
+          <p><strong>Fim:</strong> ${formattedEndDate}</p>
+          <p>Para confirmar sua participação, por favor clique no link abaixo:</p>
+          <p style="text-align: center;">
+            <a href="${confirmationLink}" style="display: inline-block; padding: 10px 20px; color: #fff; background-color: #28a745; border-radius: 5px; text-decoration: none;">Confirmar Participação</a>
+          </p>
+          <p>Estamos ansiosos para vê-lo em breve!</p>
+          <p>Atenciosamente,<br/>Equipe plann.er</p>
+        </div>
+      `,
       });
       console.log(nodemailer.getTestMessageUrl(message));
 
