@@ -33,12 +33,13 @@ export async function confirmParticipants(app: FastifyInstance) {
         throw new Error("Participant not found");
       }
 
-      if (!participant.is_confirmed) {
-        await prisma.participant.update({
-          where: { id: participantId },
-          data: { is_confirmed: true },
-        });
+      if (participant.is_confirmed) {
+        throw new Error("Participant is confirmed");
       }
+      await prisma.participant.update({
+        where: { id: participantId },
+        data: { is_confirmed: true },
+      });
 
       // Ajustando o redirecionamento para usar tripId se estiver disponível
       const redirectUrl = tripId

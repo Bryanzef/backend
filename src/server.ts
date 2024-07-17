@@ -6,6 +6,10 @@ import { confirmTrip } from "./routes/confirm-trip";
 
 import cors from "@fastify/cors";
 import { confirmParticipants } from "./routes/confirm-participant";
+import { createActivity } from "./routes/create-activity";
+import { getActivities } from "./routes/get-activities";
+import { getLinks } from "./routes/get-links";
+import { createLink } from "./routes/create-link";
 
 const app = fastify();
 
@@ -20,6 +24,10 @@ app.setSerializerCompiler(serializerCompiler);
 app.register(createTrip);
 app.register(confirmTrip);
 app.register(confirmParticipants);
+app.register(createActivity);
+app.register(getActivities);
+app.register(createLink);
+app.register(getLinks);
 
 app.listen({ port: 3333 }).then(() => {
   console.log("listening port  3333");
